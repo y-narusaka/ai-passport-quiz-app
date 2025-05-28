@@ -33,6 +33,7 @@ function startQuiz() {
   const questionCountSelect = document.getElementById('question-count-select');
   const selectedQuestionCount = parseInt(questionCountSelect.value, 10);
 
+  // allQuestions.length は questions.js で定義されている全問題数
   if (isNaN(selectedQuestionCount) || selectedQuestionCount < 1 || selectedQuestionCount > allQuestions.length) {
     alert(`問題数は1から${allQuestions.length}の間で選択してください。`);
     return;
@@ -79,12 +80,12 @@ function displayQuestion(question) {
 
   question.Choice.forEach((choice, index) => {
     const listItem = document.createElement('li');
-    const radioId = `choice-${index}`; // ユニークなIDを生成
+    // radioId に currentQuestionIndex を含めることで、よりユニークなIDを生成
+    const radioId = `choice-${currentQuestionIndex}-${index}`; 
 
     listItem.innerHTML = `
       <input type="radio" id="${radioId}" name="choice" value="${index + 1}">
-      <label for="${radioId}">${choice}</label>
-    `;
+      <label for="${radioId}">${index + 1}. ${choice}</label> `;
     
     const radioInput = listItem.querySelector(`#${radioId}`);
     radioInput.addEventListener('change', () => {
@@ -529,8 +530,7 @@ function displayQuestionDetail(questionId) {
         ${question.Choice.map((choice, index) => `
           <li>
             <input type="radio" id="detail-choice-${question.id}-${index}" name="detail-choice-${question.id}" value="${index + 1}" disabled>
-            <label for="detail-choice-${question.id}-${index}">${choice}</label>
-          </li>
+            <label for="detail-choice-${question.id}-${index}">${index + 1}. ${choice}</label> </li>
         `).join('')}
       </ul>
       <div class="answer">
@@ -545,7 +545,7 @@ function displayQuestionDetail(questionId) {
 
 // パンくずリストからの戻る処理 (各階層)
 function backToChapterList() {
-  currentBreadcrumb = []; // パンくずリストをクリアしてメニューに戻る
+  currentBreadcrumb = []; // パンくずリストをクリアして章リストに戻る
   updateBreadcrumb();
   renderChapterList(); // 章リストを再描画
 }
@@ -607,12 +607,11 @@ window.onload = () => {
   const questionCountSelect = document.getElementById('question-count-select');
   // 既存のオプションをクリア
   questionCountSelect.innerHTML = ''; 
-  for (let i = 1; i <= allQuestions.length; i++) {
+  for (let i = 1; i <= allQuestions.length; i++) { // allQuestions.length を使用して最大問題数を動的に設定
     const option = document.createElement('option');
     option.value = i;
     option.textContent = `${i}問`;
     questionCountSelect.appendChild(option);
   }
-  // デフォルトで20問を選択
-  questionCountSelect.value = 20; 
+  // デフォルトで特定の問数を選択しないため、questionCountSelect.valueの設定は削除
 };
