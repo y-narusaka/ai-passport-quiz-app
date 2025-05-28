@@ -33,14 +33,20 @@ function startQuiz() {
   const questionCountSelect = document.getElementById('question-count-select');
   const selectedQuestionCount = parseInt(questionCountSelect.value, 10);
 
-  // allQuestions.length は questions.js で定義されている全問題数
-  if (isNaN(selectedQuestionCount) || selectedQuestionCount < 1 || selectedQuestionCount > allQuestions.length) {
-    alert(`問題数は1から${allQuestions.length}の間で選択してください。`);
+  // MAX_QUESTIONSを60に固定
+  const MAX_QUESTIONS = 60;
+
+  if (isNaN(selectedQuestionCount) || selectedQuestionCount < 1 || selectedQuestionCount > MAX_QUESTIONS) {
+    alert(`問題数は1から${MAX_QUESTIONS}の間で選択してください。`);
     return;
   }
-
-  // allQuestionsから新しい配列を作成してシャッフル・スライス
-  questions = shuffleArray([...allQuestions]).slice(0, selectedQuestionCount);
+  
+  // allQuestionsから新しい配列を作成してシャッフル
+  let shuffledQuestions = shuffleArray([...allQuestions]);
+  
+  // 選択された問題数までスライス。allQuestionsの数を超えないようにMath.minを使用
+  questions = shuffledQuestions.slice(0, Math.min(selectedQuestionCount, allQuestions.length));
+  
   currentQuestionIndex = 0;
   userAnswers = new Array(questions.length).fill(null); // 回答をnullで初期化
 
@@ -78,18 +84,22 @@ function displayQuestion(question) {
   const choicesDiv = document.getElementById('choices');
   const choicesList = document.createElement('ul');
 
-  question.Choice.forEach((choice, index) => {
+  question.Choice.forEach((choiceText, index) => { // choiceText は "1 芸術に関する知識が全くない。" のような文字列
     const listItem = document.createElement('li');
-    // radioId に currentQuestionIndex を含めることで、よりユニークなIDを生成
     const radioId = `choice-${currentQuestionIndex}-${index}`; 
 
+    // choiceText から番号と問題文を分離
+    const match = choiceText.match(/^(\d+)\s(.*)$/); // 数字とその後ろのスペース、残りのテキストを抽出
+    const choiceNumber = match ? match[1] : (index + 1).toString(); // 数字があればそれを、なければindex+1
+    const actualChoiceText = match ? match[2] : choiceText; // 問題文の部分
+
     listItem.innerHTML = `
-      <input type="radio" id="${radioId}" name="choice" value="${index + 1}">
-      <label for="${radioId}">${index + 1}. ${choice}</label> `;
+      <input type="radio" id="${radioId}" name="choice" value="${choiceNumber}">
+      <label for="${radioId}">${choiceText}</label> `;
     
     const radioInput = listItem.querySelector(`#${radioId}`);
     radioInput.addEventListener('change', () => {
-        selectChoice(index + 1); // 選択された選択肢の番号を渡す
+        selectChoice(parseInt(choiceNumber, 10)); // 選択された選択肢の番号を渡す
     });
 
     choicesList.appendChild(listItem);
@@ -100,7 +110,7 @@ function displayQuestion(question) {
 
   // ユーザーが以前に選択した回答がある場合はそれを復元
   const userAnswer = userAnswers[currentQuestionIndex];
-  if (userAnswer !== null) { // nullチェックを厳密にする
+  if (userAnswer !== null) {
     const selectedRadio = choicesDiv.querySelector(`input[name="choice"][value="${userAnswer}"]`);
     if (selectedRadio) {
       selectedRadio.checked = true;
@@ -117,7 +127,6 @@ function selectChoice(choiceNumber) {
   });
 
   // 選択されたラジオボタンの親要素に 'selected' クラスを追加
-  // input[name="choice"][value="${choiceNumber}"]でラジオボタンを特定し、その親のliを取得
   const selectedRadio = document.querySelector(`#choices input[name="choice"][value="${choiceNumber}"]`);
   if (selectedRadio) {
     selectedRadio.closest('li').classList.add('selected');
@@ -181,14 +190,18 @@ function showResults() {
     questionResultDiv.innerHTML = `
       <h3>問 ${question.id}: ${question.Quiz}</h3>
       <ul>
-        ${question.Choice.map((choice, i) => `
-          <li class="${isCorrect && (i + 1).toString() === question.Answer ? 'correct-answer' : (userAnswer === (i + 1) && !isCorrect ? 'user-answer' : '')}">
-            ${i + 1}. ${choice}
-          </li>
-        `).join('')}
+        ${question.Choice.map((choiceText, i) => {
+            // choiceTextから番号部分を抽出し、HTML表示には元のchoiceTextを使用
+            const match = choiceText.match(/^(\d+)\s(.*)$/);
+            const choiceNumber = match ? match[1] : (i + 1).toString(); // valueに使用
+            return `
+              <li class="${isCorrect && choiceNumber === question.Answer ? 'correct-answer' : (userAnswer === parseInt(choiceNumber, 10) && !isCorrect ? 'user-answer' : '')}">
+                ${choiceText}
+              </li>
+            `;
+        }).join('')}
       </ul>
-      <p><strong>正解:</strong> ${question.Answer}. ${question.Choice[parseInt(question.Answer) - 1]}</p>
-      <div class="description">
+      <p><strong>正解:</strong> ${question.Answer}. ${question.Choice[parseInt(question.Answer) - 1].replace(/^\d+\s/, '')}</p> <div class="description">
         <p><strong>解説:</strong> ${question.Description}</p>
       </div>
     `;
@@ -292,13 +305,17 @@ function displayPastResultDetails(index) {
     questionResultDiv.innerHTML = `
       <h3>問 ${question.id}: ${question.Quiz}</h3>
       <ul>
-        ${question.Choice.map((choice, i) => `
-          <li class="${isCorrect && (i + 1).toString() === question.Answer ? 'correct-answer' : (userAnswer === (i + 1) && !isCorrect ? 'user-answer' : '')}">
-            ${i + 1}. ${choice}
-          </li>
-        `).join('')}
+        ${question.Choice.map((choiceText, i) => {
+            const match = choiceText.match(/^(\d+)\s(.*)$/);
+            const choiceNumber = match ? match[1] : (i + 1).toString();
+            return `
+              <li class="${isCorrect && choiceNumber === question.Answer ? 'correct-answer' : (userAnswer === parseInt(choiceNumber, 10) && !isCorrect ? 'user-answer' : '')}">
+                ${choiceText}
+              </li>
+            `;
+        }).join('')}
       </ul>
-      <p><strong>正解:</strong> ${question.Answer}. ${question.Choice[parseInt(question.Answer) - 1]}</p>
+      <p><strong>正解:</strong> ${question.Answer}. ${question.Choice[parseInt(question.Answer) - 1].replace(/^\d+\s/, '')}</p>
       <div class="description">
         <p><strong>解説:</strong> ${question.Description}</p>
       </div>
@@ -527,14 +544,20 @@ function displayQuestionDetail(questionId) {
     <div class="question-detail-container">
       <h3>問 ${question.id}: ${question.Quiz}</h3>
       <ul>
-        ${question.Choice.map((choice, index) => `
-          <li>
-            <input type="radio" id="detail-choice-${question.id}-${index}" name="detail-choice-${question.id}" value="${index + 1}" disabled>
-            <label for="detail-choice-${question.id}-${index}">${index + 1}. ${choice}</label> </li>
-        `).join('')}
+        ${question.Choice.map((choiceText, index) => {
+            // ここもchoiceTextをそのまま表示
+            const match = choiceText.match(/^(\d+)\s(.*)$/);
+            const choiceNumber = match ? match[1] : (index + 1).toString();
+            return `
+              <li>
+                <input type="radio" id="detail-choice-${question.id}-${index}" name="detail-choice-${question.id}" value="${choiceNumber}" disabled>
+                <label for="detail-choice-${question.id}-${index}">${choiceText}</label>
+              </li>
+            `;
+        }).join('')}
       </ul>
       <div class="answer">
-        <p><strong>正解:</strong> ${question.Answer}. ${question.Choice[parseInt(question.Answer) - 1]}</p>
+        <p><strong>正解:</strong> ${question.Answer}. ${question.Choice[parseInt(question.Answer) - 1].replace(/^\d+\s/, '')}</p>
       </div>
       <div class="description">
         <p><strong>解説:</strong> ${question.Description}</p>
@@ -607,7 +630,7 @@ window.onload = () => {
   const questionCountSelect = document.getElementById('question-count-select');
   // 既存のオプションをクリア
   questionCountSelect.innerHTML = ''; 
-  for (let i = 1; i <= allQuestions.length; i++) { // allQuestions.length を使用して最大問題数を動的に設定
+  for (let i = 1; i <= 60; i++) { // ここを60に固定
     const option = document.createElement('option');
     option.value = i;
     option.textContent = `${i}問`;
