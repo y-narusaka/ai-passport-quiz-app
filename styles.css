@@ -450,9 +450,9 @@ h1, h2, h3 {
     padding: 12px;
   }
 
-  #choices li span,
-  .question-result li span,
-  #past-results-details li span,
+  #choices li span,\
+  .question-result li span,\
+  #past-results-details li span,\
   .question-detail-container li span {
     margin-right: 6px; /* スマホでは数字の余白を少し減らす */
   }
