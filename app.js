@@ -250,7 +250,14 @@ function showPastResults() {
   showScreen('past-results');
   const pastResultsListDiv = document.getElementById('past-results-list');
   const pastResultsDetailsDiv = document.getElementById('past-results-details');
-  pastResultsListDiv.innerHTML = '<h3>過去のクイズ結果</h3><ul></ul>';
+  
+  // リセットボタンの追加
+  pastResultsListDiv.innerHTML = `
+    <h3>過去のクイズ結果</h3>
+    <button class="clear-results-button" onclick="clearAllResults()">全ての結果を削除</button>
+    <ul></ul>
+  `; // ここを修正
+
   pastResultsDetailsDiv.innerHTML = ''; // 詳細表示をクリア
 
   const results = loadResults();
@@ -258,6 +265,8 @@ function showPastResults() {
 
   if (results.length === 0) {
     ul.innerHTML = '<li>過去の結果はありません。</li>';
+    // 結果がない場合、リセットボタンを無効化する
+    document.querySelector('.clear-results-button').disabled = true;
   } else {
     // 最新の結果が上に来るように逆順で表示
     results.slice().reverse().forEach((result, index) => {
@@ -269,6 +278,16 @@ function showPastResults() {
       li.addEventListener('click', () => displayPastResultDetails(originalIndex));
       ul.appendChild(li);
     });
+    // 結果がある場合、リセットボタンを有効化する
+    document.querySelector('.clear-results-button').disabled = false;
+  }
+}
+
+// 全ての過去のクイズ結果を削除する関数
+function clearAllResults() {
+  if (confirm('全ての過去のクイズ結果を削除してもよろしいですか？この操作は元に戻せません。')) {
+    localStorage.removeItem('quizResults');
+    showPastResults(); // 削除後にリストを再描画
   }
 }
 
@@ -550,7 +569,7 @@ function displayQuestionDetail(questionId) {
             return `
               <li>
                 <span>${choiceNumber}</span> <input type="radio" id="detail-choice-${question.id}-${index}" name="detail-choice-${question.id}" value="${choiceNumber}" disabled>
-                <label for="detail-choice-${question.id}-${index}">${actualChoiceText}</label> </li>
+                <label for="${radioId}">${actualChoiceText}</label> </li>
             `;
         }).join('')}
       </ul>
