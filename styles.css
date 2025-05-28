@@ -286,6 +286,31 @@ h1, h2, h3 {
   background-color: #f0f0f0;
 }
 
+/* 過去の結果を全て削除ボタン */
+.clear-results-button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: none;
+  background-color: #dc3545; /* 赤色 */
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: 10px; /* 他の要素との余白 */
+  margin-bottom: 10px; /* 下のリストとの余白 */
+  float: right; /* 右寄せ */
+}
+
+.clear-results-button:hover {
+  background-color: #c82333;
+}
+
+.clear-results-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+
 #past-results-details {
   margin: 20px 0;
 }
@@ -481,6 +506,17 @@ h1, h2, h3 {
 
   .breadcrumb {
     font-size: 0.8em;
+  }
+
+  /* スマホでのリセットボタンのスタイル調整 */
+  .clear-results-button {
+    font-size: 12px;
+    padding: 6px 10px;
+    margin-left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    float: none;
+    margin-bottom: 5px;
   }
 }
 
