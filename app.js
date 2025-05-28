@@ -90,12 +90,12 @@ function displayQuestion(question) {
 
     // choiceText から番号と問題文を分離
     const match = choiceText.match(/^(\d+)\s(.*)$/); // 数字とその後ろのスペース、残りのテキストを抽出
-    const choiceNumber = match ? match[1] : (index + 1).toString(); // 数字があればそれを、なければindex+1
-    const actualChoiceText = match ? match[2] : choiceText; // 問題文の部分
+    const choiceNumber = match ? match[1] : (index + 1).toString(); // ラジオボタンのvalueと、表示する番号
+    const actualChoiceText = match ? match[2] : choiceText; // 表示する問題文の部分
 
     listItem.innerHTML = `
-      <input type="radio" id="${radioId}" name="choice" value="${choiceNumber}">
-      <label for="${radioId}">${choiceText}</label> `;
+      <span>${choiceNumber}</span> <input type="radio" id="${radioId}" name="choice" value="${choiceNumber}">
+      <label for="${radioId}">${actualChoiceText}</label> `;
     
     const radioInput = listItem.querySelector(`#${radioId}`);
     radioInput.addEventListener('change', () => {
@@ -191,13 +191,12 @@ function showResults() {
       <h3>問 ${question.id}: ${question.Quiz}</h3>
       <ul>
         ${question.Choice.map((choiceText, i) => {
-            // choiceTextから番号部分を抽出し、HTML表示には元のchoiceTextを使用
             const match = choiceText.match(/^(\d+)\s(.*)$/);
-            const choiceNumber = match ? match[1] : (i + 1).toString(); // valueに使用
+            const choiceNumber = match ? match[1] : (i + 1).toString();
+            const actualChoiceText = match ? match[2] : choiceText;
             return `
               <li class="${isCorrect && choiceNumber === question.Answer ? 'correct-answer' : (userAnswer === parseInt(choiceNumber, 10) && !isCorrect ? 'user-answer' : '')}">
-                ${choiceText}
-              </li>
+                <span>${choiceNumber}</span> ${actualChoiceText} </li>
             `;
         }).join('')}
       </ul>
@@ -308,10 +307,10 @@ function displayPastResultDetails(index) {
         ${question.Choice.map((choiceText, i) => {
             const match = choiceText.match(/^(\d+)\s(.*)$/);
             const choiceNumber = match ? match[1] : (i + 1).toString();
+            const actualChoiceText = match ? match[2] : choiceText;
             return `
               <li class="${isCorrect && choiceNumber === question.Answer ? 'correct-answer' : (userAnswer === parseInt(choiceNumber, 10) && !isCorrect ? 'user-answer' : '')}">
-                ${choiceText}
-              </li>
+                <span>${choiceNumber}</span> ${actualChoiceText} </li>
             `;
         }).join('')}
       </ul>
@@ -545,14 +544,13 @@ function displayQuestionDetail(questionId) {
       <h3>問 ${question.id}: ${question.Quiz}</h3>
       <ul>
         ${question.Choice.map((choiceText, index) => {
-            // ここもchoiceTextをそのまま表示
             const match = choiceText.match(/^(\d+)\s(.*)$/);
             const choiceNumber = match ? match[1] : (index + 1).toString();
+            const actualChoiceText = match ? match[2] : choiceText;
             return `
               <li>
-                <input type="radio" id="detail-choice-${question.id}-${index}" name="detail-choice-${question.id}" value="${choiceNumber}" disabled>
-                <label for="detail-choice-${question.id}-${index}">${choiceText}</label>
-              </li>
+                <span>${choiceNumber}</span> <input type="radio" id="detail-choice-${question.id}-${index}" name="detail-choice-${question.id}" value="${choiceNumber}" disabled>
+                <label for="detail-choice-${question.id}-${index}">${actualChoiceText}</label> </li>
             `;
         }).join('')}
       </ul>
