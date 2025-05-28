@@ -363,7 +363,7 @@ h1, h2, h3 {
   color: #007bff;
 }
 
-.breadcrumb span:hover {
+.breadcrumb span.clickable:hover { /* クリック可能なパンくずのみホバーで下線 */
   text-decoration: underline;
 }
 
