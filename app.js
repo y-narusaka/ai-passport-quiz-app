@@ -38,6 +38,7 @@ function startQuiz() {
     return;
   }
 
+  // ここで、参照渡しではなく、allQuestionsから新しい配列を作成してシャッフル・スライスする
   questions = shuffleArray([...allQuestions]).slice(0, selectedQuestionCount);
   currentQuestionIndex = 0;
   userAnswers = new Array(questions.length).fill(null); // 回答をnullで初期化
@@ -115,9 +116,10 @@ function selectChoice(choiceNumber) {
   });
 
   // 選択された選択肢に 'selected' クラスを追加
-  const selectedLi = document.querySelector(`#choices input[value="${choiceNumber}"]`).closest('li');
-  if (selectedLi) {
-    selectedLi.classList.add('selected');
+  // input[value="${choiceNumber}"]でラジオボタンを特定し、その親のliを取得
+  const selectedRadio = document.querySelector(`#choices input[name="choice"][value="${choiceNumber}"]`);
+  if (selectedRadio) {
+    selectedRadio.closest('li').classList.add('selected');
   }
 
   // ユーザーの回答を保存
@@ -164,7 +166,8 @@ function showResults() {
 
   questions.forEach((question, index) => {
     const userAnswer = userAnswers[index];
-    const isCorrect = (userAnswer !== null && userAnswer.toString() === question.Answer); // string比較
+    // Answerが文字列型なので、userAnswerも文字列型に変換して比較
+    const isCorrect = (userAnswer !== null && userAnswer.toString() === question.Answer); 
 
     if (isCorrect) {
       correctCount++;
@@ -196,17 +199,22 @@ function showResults() {
   `;
 
   // 過去の結果を保存
+  // ここで保存するquestionsは、クイズ開始時の元の問題オブジェクトのみに限定する
   saveResult({
     date: new Date().toLocaleString(),
     correct: correctCount,
     total: questions.length,
     userAnswers: userAnswers,
-    questions: questions.map(q => ({ // 問題の詳細も保存
+    questions: questions.map(q => ({ // 問題の詳細をコピーして保存
       id: q.id,
       Quiz: q.Quiz,
       Choice: q.Choice,
       Answer: q.Answer,
-      Description: q.Description
+      Description: q.Description,
+      chapter: q.chapter, // これらのプロパティも保存
+      section: q.section,
+      subsection: q.subsection,
+      learningItem: q.learningItem
     }))
   });
 }
@@ -238,11 +246,14 @@ function showPastResults() {
   if (results.length === 0) {
     ul.innerHTML = '<li>過去の結果はありません。</li>';
   } else {
-    results.forEach((result, index) => {
+    // 最新の結果が上に来るように逆順で表示
+    results.slice().reverse().forEach((result, index) => {
+      // 実際のインデックスは reverse() される前のものになるため、再計算が必要
+      const originalIndex = results.length - 1 - index;
       const li = document.createElement('li');
       li.textContent = `${result.date} - ${result.correct} / ${result.total} 問正解 (${((result.correct / result.total) * 100).toFixed(1)}%)`;
-      li.dataset.index = index;
-      li.addEventListener('click', () => displayPastResultDetails(index));
+      li.dataset.index = originalIndex; // 元のインデックスを保持
+      li.addEventListener('click', () => displayPastResultDetails(originalIndex));
       ul.appendChild(li);
     });
   }
@@ -374,7 +385,8 @@ function showList(listId) {
 // 章リストの表示
 function renderChapterList() {
   showList('chapter-list');
-  document.getElementById('section-list').style.display = 'none'; // 他のリストは非表示
+  // 他のリストは非表示（念のため）
+  document.getElementById('section-list').style.display = 'none';
   document.getElementById('subsection-list').style.display = 'none';
   document.getElementById('learning-item-list').style.display = 'none';
   document.getElementById('question-detail-list').style.display = 'none';
@@ -482,7 +494,15 @@ function renderQuestionDetailList(chapter, section, subsection, learningItem) {
         button.classList.add('menu-button'); // スタイルを再利用
         button.textContent = `問 ${question.id}`;
         button.onclick = () => {
-            currentBreadcrumb.push({ type: 'question', name: `問 ${question.id}`, id: question.id });
+            currentBreadcrumb.push({ 
+                type: 'question', 
+                name: `問 ${question.id}`, 
+                id: question.id,
+                chapter: chapter, // パンくずリストからの戻る処理のために追加
+                section: section,
+                subsection: subsection,
+                learningItem: learningItem
+            });
             updateBreadcrumb();
             displayQuestionDetail(question.id);
         };
@@ -528,6 +548,7 @@ function backToLearningItemList() {
   currentBreadcrumb.pop(); // 現在の項目を削除
   updateBreadcrumb();
   const lastCrumb = currentBreadcrumb[currentBreadcrumb.length - 1];
+  // renderLearningItemListにはchapter, section, subsectionが必要です
   renderLearningItemList(lastCrumb.chapter, lastCrumb.section, lastCrumb.subsection);
 }
 
@@ -535,6 +556,7 @@ function backToSubsectionList() {
     currentBreadcrumb.pop(); // 現在の項目を削除
     updateBreadcrumb();
     const lastCrumb = currentBreadcrumb[currentBreadcrumb.length - 1];
+    // renderSubsectionListにはchapter, sectionが必要です
     renderSubsectionList(lastCrumb.chapter, lastCrumb.section);
 }
 
@@ -542,6 +564,7 @@ function backToSectionList() {
     currentBreadcrumb.pop(); // 現在の項目を削除
     updateBreadcrumb();
     const lastCrumb = currentBreadcrumb[currentBreadcrumb.length - 1];
+    // renderSectionListにはchapterが必要です
     renderSectionList(lastCrumb.chapter);
 }
 
@@ -549,6 +572,7 @@ function backToQuestionDetailList() {
   currentBreadcrumb.pop(); // 現在の項目を削除
   updateBreadcrumb();
   const lastCrumb = currentBreadcrumb[currentBreadcrumb.length - 1];
+  // renderQuestionDetailListにはchapter, section, subsection, learningItemが必要です
   renderQuestionDetailList(lastCrumb.chapter, lastCrumb.section, lastCrumb.subsection, lastCrumb.learningItem);
 }
 
@@ -563,6 +587,7 @@ function backToMenuFromQuestionList() {
 
 // 問題一覧画面のリセット
 function resetQuestionListViews() {
+  // すべてのリストコンテナを非表示にする
   document.getElementById("chapter-list").style.display = "none";
   document.getElementById("section-list").style.display = "none";
   document.getElementById("subsection-list").style.display = "none";
@@ -570,8 +595,8 @@ function resetQuestionListViews() {
   document.getElementById("question-detail-list").style.display = "none";
   document.getElementById("question-detail").style.display = "none";
   
-  // 章一覧を表示 (パンくずリストから戻る際に使用)
-  document.getElementById("chapter-list").style.display = "block";
+  // 初期表示に戻すため、chapter-listを再び表示する設定は行わない
+  // showQuestionListが呼ばれたときにrenderChapterListが自動的に表示します
 }
 
 // 初期表示
