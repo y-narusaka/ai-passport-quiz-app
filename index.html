@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>生成AIパスポート試験問題アプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>生成AIパスポート試験問題アプリ</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -29,21 +29,21 @@
     <div class="quiz-navigation">
       <button id="prev-button" onclick="prevQuestion()">前へ</button>
       <button id="next-button" onclick="nextQuestion()">次へ</button>
-      <button id="submit-button" onclick="submitQuiz()" style="display:none">結果を見る</button>
     </div>
   </div>
 
   <div id="results" class="screen" style="display:none">
-    <h2>結果</h2>
-    <div id="result-details"></div>
-    <button class="back-button" onclick="backToMenuFromResults()">最初の画面に戻る</button>
+    <h2>クイズ結果</h2>
+    <div id="results-summary"></div>
+    <div id="results-details"></div>
+    <button class="back-button" onclick="backToMenuFromResult()">最初の画面に戻る</button>
   </div>
 
   <div id="past-results" class="screen" style="display:none">
-    <h2>過去の結果</h2>
-    <div id="past-results-details"></div>
-    <button class="back-button" onclick="backToMenuFromPastResults()">最初の画面に戻る</button>
-    <button class="danger" onclick="resetPastResults()">履歴をリセット</button>
+    <button class="back-button" onclick="backToMenuFromResult()">最初の画面に戻る</button> <div id="past-results-list">
+      </div>
+    <div id="past-results-details">
+      </div>
   </div>
 
   <div id="question-list" class="screen" style="display:none">
@@ -57,8 +57,7 @@
     </div>
     
     <div id="section-list" class="list-container" style="display:none">
-      <button class="back-button" onclick="backToSectionList()">大項目一覧に戻る</button>
-      <div class="button-grid"></div>
+      <button class="back-button" onclick="backToChapterList()">章一覧に戻る</button> <div class="button-grid"></div>
     </div>
     
     <div id="subsection-list" class="list-container" style="display:none">
@@ -77,9 +76,7 @@
     </div>
     
     <div id="question-detail" class="list-container" style="display:none">
-      <button class="back-button" onclick="backToQuestionList()">問題一覧に戻る</button>
-      <div class="question-detail-container"></div>
-    </div>
+      </div>
   </div>
 
   <script src="questions.js"></script>
